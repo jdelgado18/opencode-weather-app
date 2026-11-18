@@ -1,20 +1,24 @@
 import type { Clima } from "./api.ts";
+import { pintar } from "./colores.ts";
 import type { Ciudad, Datos } from "./store.ts";
 
 const LINEA = "════════════════════════════════════════";
 
 export function mostrarMenu(datos: Datos): void {
-  console.log(LINEA);
-  console.log("         WEATHER CLI");
-  console.log(LINEA);
-  console.log("  1. Clima de ciudad default");
-  console.log(`  2. Clima de todas las ciudades (${datos.ciudades.length})`);
-  console.log("  3. Buscar y agregar ciudad");
-  console.log("  4. Eliminar ciudad");
-  console.log("  5. Establecer ciudad default");
-  console.log(`  8. Ajustes (°${datos.unidad})`);
-  console.log("  9. Salir");
-  console.log(LINEA);
+  const menu = [
+    LINEA,
+    "         WEATHER CLI",
+    LINEA,
+    "  1. Clima de ciudad default",
+    `  2. Clima de todas las ciudades (${datos.ciudades.length})`,
+    "  3. Buscar y agregar ciudad",
+    "  4. Eliminar ciudad",
+    "  5. Establecer ciudad default",
+    `  8. Ajustes (°${datos.unidad})`,
+    "  9. Salir",
+    LINEA,
+  ].join("\n");
+  console.log(pintar(menu, "cyan"));
 }
 
 function etiqueta(ciudad: Ciudad): string {
@@ -22,7 +26,8 @@ function etiqueta(ciudad: Ciudad): string {
 }
 
 export function mostrarClima(ciudad: Ciudad, clima: Clima): void {
-  console.log(`  ${etiqueta(ciudad)}: ${clima.temperatura.toFixed(1)} °${clima.unidad}`);
+  const temperatura = pintar(`${clima.temperatura.toFixed(1)} °${clima.unidad}`, "amarillo");
+  console.log(`  ${etiqueta(ciudad)}: ${temperatura}`);
 }
 
 export function listarCiudades(ciudades: Ciudad[]): void {
@@ -32,9 +37,9 @@ export function listarCiudades(ciudades: Ciudad[]): void {
 }
 
 export function info(mensaje: string): void {
-  console.log(`  ${mensaje}`);
+  console.log(pintar(`  ${mensaje}`, "verde"));
 }
 
 export function aviso(mensaje: string): void {
-  console.log(`  ! ${mensaje}`);
+  console.log(pintar(`  ! ${mensaje}`, "rojo"));
 }

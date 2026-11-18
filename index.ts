@@ -1,5 +1,6 @@
 import { dirname, join } from "node:path";
 import { buscarCiudad, obtenerClima } from "./src/api.ts";
+import { pintar } from "./src/colores.ts";
 import { crearStore, type Ciudad, type Unidad } from "./src/store.ts";
 import { aviso, info, listarCiudades, mostrarClima, mostrarMenu } from "./src/ui.ts";
 
@@ -13,7 +14,7 @@ const datos = await store.cargar();
 let salir = false;
 
 function leer(mensaje: string): string | null {
-  const entrada = prompt(mensaje);
+  const entrada = prompt(pintar(mensaje, "cyan"));
   if (entrada === null) salir = true;
   return entrada?.trim() ?? null;
 }
