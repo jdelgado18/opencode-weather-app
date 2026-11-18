@@ -14,8 +14,29 @@ type RespuestaGeocoding = { results?: ResultadoGeocoding[] };
 
 type RespuestaForecast = { current?: { temperature_2m?: number } };
 
+type DiarioPronostico = {
+  time?: string[];
+  temperature_2m_max?: number[];
+  temperature_2m_min?: number[];
+  weather_code?: number[];
+};
+
+type RespuestaPronostico = { daily?: DiarioPronostico };
+
 export type Clima = {
   temperatura: number;
+  unidad: Unidad;
+};
+
+export type DiaPronostico = {
+  fecha: string;
+  minima: number;
+  maxima: number;
+  codigoTiempo: number | null;
+};
+
+export type Pronostico = {
+  dias: DiaPronostico[];
   unidad: Unidad;
 };
 
@@ -54,12 +75,17 @@ export async function buscarCiudad(nombre: string): Promise<Ciudad | null> {
   };
 }
 
-export async function obtenerClima(ciudad: Ciudad, unidad: Unidad): Promise<Clima> {
+function urlForecast(ciudad: Ciudad, unidad: Unidad): URL {
   const url = new URL(FORECAST);
   url.searchParams.set("latitude", String(ciudad.latitud));
   url.searchParams.set("longitude", String(ciudad.longitud));
-  url.searchParams.set("current", "temperature_2m");
   if (unidad === "F") url.searchParams.set("temperature_unit", "fahrenheit");
+  return url;
+}
+
+export async function obtenerClima(ciudad: Ciudad, unidad: Unidad): Promise<Clima> {
+  const url = urlForecast(ciudad, unidad);
+  url.searchParams.set("current", "temperature_2m");
 
   const datos = (await pedir(url)) as RespuestaForecast;
   const temperatura = datos.current?.temperature_2m;
@@ -67,4 +93,44 @@ export async function obtenerClima(ciudad: Ciudad, unidad: Unidad): Promise<Clim
     throw new Error("La respuesta no incluyó la temperatura actual.");
   }
   return { temperatura, unidad };
+}
+
+export async function obtenerPronostico(
+  ciudad: Ciudad,
+  unidad: Unidad,
+): Promise<Pronostico> {
+  const url = urlForecast(ciudad, unidad);
+  url.searchParams.set("daily", "temperature_2m_max,temperature_2m_min,weather_code");
+  url.searchParams.set("forecast_days", "7");
+  url.searchParams.set("timezone", "auto");
+
+  const datos = (await pedir(url)) as RespuestaPronostico;
+  const diario = datos.daily;
+  if (!diario) {
+    throw new Error("La respuesta no incluyó el pronóstico diario.");
+  }
+
+  const fechas = diario.time ?? [];
+  const maximas = diario.temperature_2m_max ?? [];
+  const minimas = diario.temperature_2m_min ?? [];
+  const codigos = diario.weather_code ?? [];
+
+  const dias: DiaPronostico[] = [];
+  for (const [indice, fecha] of fechas.entries()) {
+    const maxima = maximas[indice];
+    const minima = minimas[indice];
+    if (typeof maxima !== "number" || typeof minima !== "number") continue;
+    const codigo = codigos[indice];
+    dias.push({
+      fecha,
+      maxima,
+      minima,
+      codigoTiempo: typeof codigo === "number" ? codigo : null,
+    });
+  }
+
+  if (dias.length === 0) {
+    throw new Error("La respuesta no incluyó temperaturas diarias.");
+  }
+  return { dias: dias.slice(0, 7), unidad };
 }

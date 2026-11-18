@@ -1,8 +1,15 @@
 import { dirname, join } from "node:path";
-import { buscarCiudad, obtenerClima } from "./src/api.ts";
+import { buscarCiudad, obtenerClima, obtenerPronostico } from "./src/api.ts";
 import { pintar } from "./src/colores.ts";
 import { crearStore, type Ciudad, type Unidad } from "./src/store.ts";
-import { aviso, info, listarCiudades, mostrarClima, mostrarMenu } from "./src/ui.ts";
+import {
+  aviso,
+  info,
+  listarCiudades,
+  mostrarClima,
+  mostrarMenu,
+  mostrarPronostico,
+} from "./src/ui.ts";
 
 // En el binario compilado Bun.main apunta a $bunfs (solo lectura): los datos
 // deben quedar junto al ejecutable, no dentro del bundle.
@@ -41,6 +48,15 @@ async function mostrarClimaDe(ciudad: Ciudad, unidad: Unidad): Promise<void> {
     mostrarClima(ciudad, await obtenerClima(ciudad, unidad));
   } catch (error) {
     aviso(error instanceof Error ? error.message : "No se pudo obtener el clima.");
+  }
+}
+
+async function mostrarPronosticoDe(ciudad: Ciudad, unidad: Unidad): Promise<void> {
+  try {
+    info("Consultando pronóstico a 7 días...");
+    mostrarPronostico(ciudad, await obtenerPronostico(ciudad, unidad));
+  } catch (error) {
+    aviso(error instanceof Error ? error.message : "No se pudo obtener el pronóstico.");
   }
 }
 
@@ -114,6 +130,12 @@ while (!salir) {
       datos.ciudadDefault = elegida.nombre;
       await store.guardar(datos);
       info(`Ciudad default: ${elegida.nombre}.`);
+      break;
+    }
+    case "6": {
+      const elegida = elegirCiudad("  Número de la ciudad para el pronóstico: ");
+      if (!elegida) break;
+      await mostrarPronosticoDe(elegida, datos.unidad);
       break;
     }
     case "8": {
