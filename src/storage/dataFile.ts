@@ -3,10 +3,14 @@ import type { Ciudad } from "../types/City.ts";
 import type { Datos } from "../types/Settings.ts";
 import { NOMBRE_DATOS } from "../utils/constants.ts";
 
+// WEATHER_DATA_FILE permite aislar la persistencia en tests; se lee en cada
+// llamada para que cada test pueda apuntar a su propio archivo temporal.
 // En el binario compilado Bun.main apunta a $bunfs (solo lectura): los datos
 // deben quedar junto al ejecutable, no dentro del bundle. Desde fuente, el
 // entry es src/index.ts y los datos viven en la raíz del proyecto.
 function rutaDatos(): string {
+  const sobreescritura = Bun.env.WEATHER_DATA_FILE;
+  if (sobreescritura) return sobreescritura;
   const base = Bun.main.includes("$bunfs")
     ? dirname(process.execPath)
     : dirname(dirname(Bun.main));

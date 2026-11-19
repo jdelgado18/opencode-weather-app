@@ -10,8 +10,8 @@ Bun CLI scaffolded with `bun init`. `README.md` describes the interactive weathe
 
 ## Commands
 - Typecheck: `bun run typecheck` → runs `bun check` (NOT `tsc --noEmit`). Single file: `bun check src/index.ts`. `bun --check`, `bun test --check`, `bun build --check` gate on types first.
-- Tests: `bun test` with `bun:test` imports; API tests live in `src/api/*.test.ts`.
-- Build: `bun run build` → `bun build --compile --outfile=weather ./src/index.ts` produces the single `weather` binary; `datos.json` lives next to the binary (or at the project root when running from source).
+- Tests: `bun run test` → `bun test tests`; every test lives in `tests/` (mirror of `src/`) with shared fixtures/mocks in `tests/helpers.ts`. Storage tests use `WEATHER_DATA_FILE` to point at temp files; never touch the real `datos.json`.
+- Check/build gate: `bun run check` runs typecheck + tests; `bun run build` runs `check` first and compiles only if it passes, producing the single `weather` binary (data lives next to it, or at the project root when running from source).
 
 ## Weather API flow (OpenMeteo, no API key)
 - Two calls, in order: geocoding `GET https://geocoding-api.open-meteo.com/v1/search?name=<city>&count=1&language=es&format=json`, then forecast `GET https://api.open-meteo.com/v1/forecast?latitude=<lat>&longitude=<lon>&current=temperature_2m`.

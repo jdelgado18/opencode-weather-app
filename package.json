@@ -1,11 +1,13 @@
 {
   "name": "02-demo",
-  "module": "index.ts",
+  "module": "src/index.ts",
   "type": "module",
   "private": true,
   "scripts": {
     "typecheck": "bun check",
-    "build": "bun build --compile --outfile=weather ./src/index.ts",
+    "test": "bun test tests",
+    "check": "bun run typecheck && bun run test",
+    "build": "bun run check && bun build --compile --outfile=weather ./src/index.ts",
     "start": "bun run src/index.ts",
     "dev": "bun --watch src/index.ts"
   },

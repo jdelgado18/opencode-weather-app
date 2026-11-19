@@ -49,3 +49,15 @@ Esta es la apariencia que deseamos crear
 ════════════════════════════════════════
   Selecciona una opción: 5
 ```
+
+## Testing
+
+Todos los tests viven en `tests/` (estructura espejo de `src/`) y usan `bun:test`.
+
+```bash
+bun run test    # corre los tests de tests/
+bun run check   # typecheck + tests
+bun run build   # ejecuta check antes de compilar; no compila si algo falla
+```
+
+Los tests de persistencia usan la variable `WEATHER_DATA_FILE` con archivos temporales, así que nunca modifican el `datos.json` real.
