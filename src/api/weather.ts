@@ -1,16 +1,6 @@
-import type { Ciudad, Unidad } from "./store.ts";
-
-const GEOCODING = "https://geocoding-api.open-meteo.com/v1/search";
-const FORECAST = "https://api.open-meteo.com/v1/forecast";
-
-type ResultadoGeocoding = {
-  name: string;
-  latitude: number;
-  longitude: number;
-  country?: string;
-};
-
-type RespuestaGeocoding = { results?: ResultadoGeocoding[] };
+import type { Ciudad } from "../types/City.ts";
+import type { Clima, DiaPronostico, Pronostico, Unidad } from "../types/Weather.ts";
+import { DIAS_PRONOSTICO, FORECAST } from "../utils/constants.ts";
 
 type RespuestaForecast = { current?: { temperature_2m?: number } };
 
@@ -23,24 +13,7 @@ type DiarioPronostico = {
 
 type RespuestaPronostico = { daily?: DiarioPronostico };
 
-export type Clima = {
-  temperatura: number;
-  unidad: Unidad;
-};
-
-export type DiaPronostico = {
-  fecha: string;
-  minima: number;
-  maxima: number;
-  codigoTiempo: number | null;
-};
-
-export type Pronostico = {
-  dias: DiaPronostico[];
-  unidad: Unidad;
-};
-
-async function pedir(url: URL): Promise<unknown> {
+export async function pedir(url: URL): Promise<unknown> {
   let respuesta: Response;
   try {
     respuesta = await fetch(url);
@@ -55,24 +28,6 @@ async function pedir(url: URL): Promise<unknown> {
   } catch {
     throw new Error("OpenMeteo devolvió una respuesta inválida.");
   }
-}
-
-export async function buscarCiudad(nombre: string): Promise<Ciudad | null> {
-  const url = new URL(GEOCODING);
-  url.searchParams.set("name", nombre);
-  url.searchParams.set("count", "1");
-  url.searchParams.set("language", "es");
-  url.searchParams.set("format", "json");
-
-  const datos = (await pedir(url)) as RespuestaGeocoding;
-  const resultado = datos.results?.[0];
-  if (!resultado) return null;
-  return {
-    nombre: resultado.name,
-    latitud: resultado.latitude,
-    longitud: resultado.longitude,
-    pais: resultado.country ?? "",
-  };
 }
 
 function urlForecast(ciudad: Ciudad, unidad: Unidad): URL {
@@ -101,7 +56,7 @@ export async function obtenerPronostico(
 ): Promise<Pronostico> {
   const url = urlForecast(ciudad, unidad);
   url.searchParams.set("daily", "temperature_2m_max,temperature_2m_min,weather_code");
-  url.searchParams.set("forecast_days", "7");
+  url.searchParams.set("forecast_days", String(DIAS_PRONOSTICO));
   url.searchParams.set("timezone", "auto");
 
   const datos = (await pedir(url)) as RespuestaPronostico;
@@ -132,5 +87,5 @@ export async function obtenerPronostico(
   if (dias.length === 0) {
     throw new Error("La respuesta no incluyó temperaturas diarias.");
   }
-  return { dias: dias.slice(0, 7), unidad };
+  return { dias: dias.slice(0, DIAS_PRONOSTICO), unidad };
 }

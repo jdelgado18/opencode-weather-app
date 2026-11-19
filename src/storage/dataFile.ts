@@ -1,22 +1,17 @@
-export type Unidad = "C" | "F";
+import { dirname, join } from "node:path";
+import type { Ciudad } from "../types/City.ts";
+import type { Datos } from "../types/Settings.ts";
+import { NOMBRE_DATOS } from "../utils/constants.ts";
 
-export type Ciudad = {
-  nombre: string;
-  latitud: number;
-  longitud: number;
-  pais: string;
-};
-
-export type Datos = {
-  ciudades: Ciudad[];
-  ciudadDefault: string | null;
-  unidad: Unidad;
-};
-
-export type Store = {
-  cargar(): Promise<Datos>;
-  guardar(datos: Datos): Promise<void>;
-};
+// En el binario compilado Bun.main apunta a $bunfs (solo lectura): los datos
+// deben quedar junto al ejecutable, no dentro del bundle. Desde fuente, el
+// entry es src/index.ts y los datos viven en la raíz del proyecto.
+function rutaDatos(): string {
+  const base = Bun.main.includes("$bunfs")
+    ? dirname(process.execPath)
+    : dirname(dirname(Bun.main));
+  return join(base, NOMBRE_DATOS);
+}
 
 function vacios(): Datos {
   return { ciudades: [], ciudadDefault: null, unidad: "C" };
@@ -49,19 +44,16 @@ function normalizar(valor: unknown): Datos {
   };
 }
 
-export function crearStore(ruta: string): Store {
-  return {
-    async cargar() {
-      const archivo = Bun.file(ruta);
-      if (!(await archivo.exists())) return vacios();
-      try {
-        return normalizar(await archivo.json());
-      } catch {
-        return vacios();
-      }
-    },
-    async guardar(datos) {
-      await Bun.write(ruta, `${JSON.stringify(datos, null, 2)}\n`);
-    },
-  };
+export async function cargarDatos(): Promise<Datos> {
+  const archivo = Bun.file(rutaDatos());
+  if (!(await archivo.exists())) return vacios();
+  try {
+    return normalizar(await archivo.json());
+  } catch {
+    return vacios();
+  }
+}
+
+export async function guardarDatos(datos: Datos): Promise<void> {
+  await Bun.write(rutaDatos(), `${JSON.stringify(datos, null, 2)}\n`);
 }

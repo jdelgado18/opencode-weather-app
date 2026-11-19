@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, spyOn, test, type Mock } from "bun:test";
-import { obtenerPronostico } from "./api.ts";
-import type { Ciudad } from "./store.ts";
+import type { Ciudad } from "../types/City.ts";
+import { obtenerPronostico } from "./weather.ts";
 
 const lima: Ciudad = {
   nombre: "Lima",
